@@ -12,8 +12,10 @@ using System.Web.Security;
 
 namespace DrinkElivery.Controllers
 {
+   
     public class UserController : Controller
     {
+        private UserContext userContext = new UserContext();
         // GET: Teste
         public ActionResult Logar(User user)
         {
@@ -40,11 +42,11 @@ namespace DrinkElivery.Controllers
             return Json("ola", JsonRequestBehavior.AllowGet);
         }
 
-        public ActionResult Register(User user)
+        public ActionResult JRegister(User user)
         {
+            if(HasUser(user.Name)== true) { return Json("Usuário ja existe", JsonRequestBehavior.AllowGet); }
             try
             {
-                UserContext userContext = new UserContext();
                 userContext.Inserir(user);
                 return Json("Inserido com sucesso!" + user.Name , JsonRequestBehavior.AllowGet);
             }
@@ -53,15 +55,34 @@ namespace DrinkElivery.Controllers
                 return Json(ex.Message, JsonRequestBehavior.AllowGet);
             }
         }
-        
+
+        public ActionResult JHasUser(string name)
+        {
+            try
+            {
+                var user = (HasUser(name) == false ? "Válido" : "Inválido");
+                return Json(user, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(ex.Message, JsonRequestBehavior.AllowGet);
+            }
+        }
 
         [HttpGet]
-        public ActionResult Listar()
+        public ActionResult JListar()
         {
             UserContext userContext = new UserContext();
             var users = userContext.Listar();
             return Json(users, JsonRequestBehavior.AllowGet);
         }
-
+        private bool HasUser(string name)
+        {
+            bool hasUser = false;
+            var users = userContext.Listar();
+            var user = users.Where(x => x.Name == name).FirstOrDefault();
+            hasUser = (user == null ? false : true);
+            return hasUser;
+        }
     }
 }
