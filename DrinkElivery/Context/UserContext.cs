@@ -13,7 +13,7 @@ namespace DrinkElivery.Context
         public void Inserir(User user)
         {
             Con.Open();
-            var create = string.Format("INSERT INTO [dbo].[User] ([UserId] ,[Name] ,[Password]) VALUES ({0},'{1}','{2}')", user.UserId, user.Name, user.Password);
+            var create = string.Format("INSERT INTO [dbo].[User] ([UserId] ,[Name] ,[Password] ,[Email] ,[Cep]) VALUES ({0},'{1}','{2}','{3}','{4}')", user.UserId, user.Name, user.Password,user.Email, user.Cep);
             SqlCommand command = new SqlCommand();
             command.Connection = Con;
             command.CommandText = create;
@@ -25,7 +25,7 @@ namespace DrinkElivery.Context
         {
             List<User> user = new List<User>();       
             Con.Open();
-            var listar = "SELECT [UserId] ,[Name] ,[Password] FROM[Drinklivery].[dbo].[User]";
+            var listar = "SELECT [UserId] ,[Name] ,[Password] ,[Email] ,[Cep] FROM[Drinklivery].[dbo].[User]";
 
             SqlCommand command = new SqlCommand();
             command.Connection = Con;
@@ -38,6 +38,8 @@ namespace DrinkElivery.Context
                 Temp.Name = dataReader["Name"].ToString();
                 Temp.UserId = Convert.ToInt32(dataReader["UserId"].ToString());
                 Temp.Password = dataReader["Password"].ToString();
+                Temp.Email = dataReader["Email"].ToString();
+                Temp.Cep = dataReader["Cep"].ToString();
                 user.Add(Temp);
             }
 

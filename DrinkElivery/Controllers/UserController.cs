@@ -17,30 +17,55 @@ namespace DrinkElivery.Controllers
     {
         private UserContext userContext = new UserContext();
         // GET: Teste
-        public ActionResult Logar(User user)
+        public ActionResult Logar([System.Web.Http.FromBody] User user)
         {
-            var userModel = new CustomSerializeModel()
-            {
-                UserId = user.UserId,
-                Name = user.Name,
-                Password = user.Password,
-            };
-
-            string userData = JsonConvert.SerializeObject(userModel);
+            string userData = JsonConvert.SerializeObject(user);
             FormsAuthenticationTicket authTicket = new FormsAuthenticationTicket
                 (
-                1, user.Name, DateTime.Now, DateTime.Now.AddMinutes(20), true, userData
+                1, user.Name, DateTime.Now, DateTime.Now.AddYears(1), true, userData
                 );
 
             string enTicket = FormsAuthentication.Encrypt(authTicket);
-            HttpCookie faCookie = new HttpCookie("Cookie1", enTicket)
-            {
-                Domain = ConfigurationManager.AppSettings["Default"],
-                Expires = DateTime.Now.AddMinutes(20)
-            };
-            Response.Cookies.Add(faCookie);
-            return Json("ola", JsonRequestBehavior.AllowGet);
+
+            var cookie = new HttpCookie("Cookie1", enTicket);
+            Response.AppendCookie(cookie);
+
+            return Json("Logado", JsonRequestBehavior.AllowGet);
         }
+
+
+        public ActionResult Logout()
+        {
+            HttpCookie authCookie = Request.Cookies["Cookie1"];
+            if (authCookie != null)
+            {
+                authCookie.Expires = DateTime.Now.AddYears(-1);
+                Response.Cookies.Add(authCookie);
+                FormsAuthentication.SignOut();
+                return Json("Logout ! ", JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                return Json("Nenhum usuário logado!", JsonRequestBehavior.AllowGet);
+            }
+        }
+
+
+        public ActionResult JLoged()
+        {
+            HttpCookie authCookie = Request.Cookies["Cookie1"];
+            if(authCookie != null)
+            {
+                var authTicket = FormsAuthentication.Decrypt(authCookie.Value);
+                var usuario = Request.Cookies["Cookie1"] != null ? JsonConvert.DeserializeObject<User>(authTicket.UserData) : null;
+                return Json(usuario, JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                return Json("Nenhum usuário logado!", JsonRequestBehavior.AllowGet);
+            }
+        }
+
 
         public ActionResult JRegister(User user)
         {
@@ -55,6 +80,7 @@ namespace DrinkElivery.Controllers
                 return Json(ex.Message, JsonRequestBehavior.AllowGet);
             }
         }
+
 
         public ActionResult JHasUser(string name)
         {
@@ -76,11 +102,12 @@ namespace DrinkElivery.Controllers
             var users = userContext.Listar();
             return Json(users, JsonRequestBehavior.AllowGet);
         }
-        private bool HasUser(string name)
+
+        private bool HasUser(string email)
         {
             bool hasUser = false;
             var users = userContext.Listar();
-            var user = users.Where(x => x.Name == name).FirstOrDefault();
+            var user = users.Where(x => x.Email == email).FirstOrDefault();
             hasUser = (user == null ? false : true);
             return hasUser;
         }
